@@ -1,13 +1,11 @@
-import 'dart:ui';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tmdb/bloc/fav_movies/fav_movies_bloc.dart';
 
 import 'package:tmdb/bloc/home_screen_state_bloc/home_screen_state_bloc_bloc.dart';
 import 'package:tmdb/bloc/movies_bloc/movies_bloc.dart';
-import 'package:tmdb/constants/tmdb.dart';
+import 'package:tmdb/bloc/net_state_bloc/net_state_bloc_bloc.dart';
+import 'package:tmdb/screens/home_screen/utils/movie_card.dart';
 
 import '../../models/movie_model.dart';
 
@@ -19,38 +17,150 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool showFavourite = false;
+  final focusNode = FocusNode();
+  List<Movie> searchResult = [];
+  @override
+  void initState() {
+    // TODO: implement initState
+    context.read<NetStateBlocBloc>().add(CheckNetStatusEvent());
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final homeScreenState = context.watch<HomeScreenStateBlocBloc>();
     final favMoviesBolc = context.watch<FavMoviesBloc>();
-    return Scaffold(
-      body: Builder(builder: (context) {
-        if (homeScreenState.state.isLoading == true) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-        return GestureDetector(
-          onTap: () async {},
-          child: Builder(builder: (context) {
+    final netState = context.watch<NetStateBlocBloc>();
+
+    if (homeScreenState.state.isLoading == true) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    if (netState.state.state == NetState.notAvailable) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text("No Internet"),
+        ),
+        body: Builder(builder: (context) {
+          return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 2.0,
+                  mainAxisSpacing: 10.0,
+                  childAspectRatio: 0.5),
+              itemCount: context.read<FavMoviesBloc>().state.movies.length,
+              itemBuilder: (context, index) {
+                Movie thisMovie =
+                    context.read<FavMoviesBloc>().state.movies[index];
+                return Container(
+                  padding: const EdgeInsets.all(2),
+                  child: Center(
+                      child: MovieCard(
+                    showSavedData: true,
+                    favHandler: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Action Could not be completed! Connect to Internet',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.redAccent,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    },
+                    movieGenere: thisMovie.genere,
+                    isFav: thisMovie.isFav,
+                    movieTitle: thisMovie.movieTitle,
+                    bannerImgUrl:
+                        thisMovie.savedImagePath ?? thisMovie.bannerImgUrl,
+                  )),
+                );
+              });
+        }),
+      );
+    } else if (netState.state.state == NetState.available) {
+      return Scaffold(
+        appBar: AppBar(
+            title: const Text("Stage Tbmd"),
+            actions: [
+              Container(
+                padding: EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    const Text("Show Fav"),
+                    Switch(
+                      value: showFavourite,
+                      onChanged: (value) {
+                        setState(() {
+                          showFavourite = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: showFavourite == true
+                  ? const Size.fromHeight(0)
+                  : const Size.fromHeight(100),
+              child: showFavourite == true
+                  ? const SizedBox()
+                  : Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        focusNode: focusNode,
+                        onChanged: (val) {
+                          final filtered = context
+                              .read<MoviesBloc>()
+                              .state
+                              .movies
+                              .where((item) {
+                            return item.movieTitle
+                                .toLowerCase()
+                                .contains(val.toLowerCase());
+                          }).toList();
+
+                          setState(() {
+                            searchResult = filtered;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Search',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+            )),
+        body: Builder(builder: (context) {
+          if (focusNode.hasFocus) {
+            if (searchResult.isEmpty) {
+              return const Center(
+                child: Text("No Such Item"),
+              );
+            }
+            return searchResultView(favMoviesBolc);
+          }
+          if (showFavourite == true) {
+            return onLineFavMovies(context);
+          }
+
+          return Builder(builder: (context) {
             if (context.read<MoviesBloc>().state.movies.isEmpty) {
               return Center(
-                child: GestureDetector(
-                    onTap: () {
-                      context.read<MoviesBloc>().add(FetchMoviesFromApi());
-                    },
-                    child: Text("get movies")),
+                child: Text("Failed to Retrive Movies"),
               );
             }
             return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // Number of columns in the grid
-                    crossAxisSpacing:
-                        2.0, // Horizontal space between grid items
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 2.0,
                     mainAxisSpacing: 10.0,
-                    childAspectRatio: 0.5 // Vertical space between grid items
-                    ),
+                    childAspectRatio: 0.5),
                 itemCount: context.read<MoviesBloc>().state.movies.length,
                 itemBuilder: (context, index) {
                   Movie thisMovie =
@@ -66,143 +176,104 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Center(
                         child: MovieCard(
                       favHandler: () {
-                        context
-                            .read<FavMoviesBloc>()
-                            .add(AddFavMovie(movie: thisMovie));
+                        if (thisMovie.isFav == true) {
+                          context
+                              .read<FavMoviesBloc>()
+                              .add(RemoveMovieEvent(movie: thisMovie));
+                        } else {
+                          context
+                              .read<FavMoviesBloc>()
+                              .add(AddFavMovieEvent(movie: thisMovie));
+                        }
                       },
-                      movieGenere:
-                          "${kTmdbMovieGenresInverted[thisMovie.genereId[0] ?? "NA"]}",
+                      movieGenere: thisMovie.genere,
                       isFav: thisMovie.isFav,
                       movieTitle: thisMovie.movieTitle,
                       bannerImgUrl: thisMovie.bannerImgUrl,
                     )),
                   );
                 });
-          }),
-        );
-      }),
-    );
+          });
+        }),
+      );
+    }
+    return const SizedBox();
   }
-}
 
-class MovieCard extends StatelessWidget {
-  const MovieCard({
-    Key? key,
-    required this.movieTitle,
-    required this.movieGenere,
-    required this.favHandler,
-    required this.bannerImgUrl,
-    required this.isFav,
-  }) : super(key: key);
-  final String movieTitle;
-  final String movieGenere;
-  final Function favHandler;
-  final String bannerImgUrl;
-  final bool isFav;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 352,
-      width: 200,
-      decoration: BoxDecoration(
-        color: Colors.grey,
-        border: Border.all(
-          color: Colors.black,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            height: 275,
-            width: 190,
-            color: Colors.white,
-            child: CachedNetworkImage(
-              imageUrl: "$kTmdbImageBaseUrl$bannerImgUrl",
-              imageBuilder: (context, imageProvioder) {
-                return Stack(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: imageProvioder, fit: BoxFit.fill),
-                      ),
-                    ),
-                    ClipRRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 5.0),
-                        child: Container(
-                          color: Colors.black.withOpacity(
-                              0.4), // Add a semi-transparent overlay
-                        ),
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: imageProvioder, fit: BoxFit.contain),
-                      ),
-                    ),
-                  ],
-                );
+  GridView onLineFavMovies(BuildContext context) {
+    return GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 2.0,
+            mainAxisSpacing: 10.0,
+            childAspectRatio: 0.5),
+        itemCount: context.read<FavMoviesBloc>().state.movies.length,
+        itemBuilder: (context, index) {
+          Movie thisMovie = context.read<FavMoviesBloc>().state.movies[index];
+          return Container(
+            padding: const EdgeInsets.all(2),
+            child: Center(
+                child: MovieCard(
+              showSavedData: true,
+              favHandler: () {
+                if (thisMovie.isFav == true) {
+                  context
+                      .read<FavMoviesBloc>()
+                      .add(RemoveMovieEvent(movie: thisMovie));
+                } else {
+                  context
+                      .read<FavMoviesBloc>()
+                      .add(AddFavMovieEvent(movie: thisMovie));
+                }
               },
-              placeholder: (context, url) => Container(
-                height: 250,
-                width: 164,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.blue,
-                  ),
-                ),
-              ),
-              errorWidget: (context, url, error) => Icon(Icons.error),
-            ),
-          ),
-          Container(
-            height: 75,
-            width: 190,
-            color: Colors.white,
-            padding: EdgeInsets.only(left: 10, right: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 150,
-                      child: Text(
-                        movieTitle,
-                        style: TextStyle(fontSize: 16),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Text(movieGenere)
-                  ],
-                ),
-                GestureDetector(
-                  onTap: () {
-                    favHandler();
-                  },
-                  child: Container(
-                    child: Icon(
-                      Icons.favorite,
-                      color: isFav ? Colors.red : Colors.grey,
-                    ),
-                  ),
-                )
-              ],
-            ),
-          )
-        ],
-      ),
-    );
+              movieGenere: thisMovie.genere,
+              isFav: thisMovie.isFav,
+              movieTitle: thisMovie.movieTitle,
+              bannerImgUrl: thisMovie.savedImagePath ?? thisMovie.bannerImgUrl,
+            )),
+          );
+        });
+  }
+
+  GridView searchResultView(FavMoviesBloc favMoviesBolc) {
+    return GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 2.0,
+            mainAxisSpacing: 10.0,
+            childAspectRatio: 0.5),
+        itemCount: searchResult.length,
+        itemBuilder: (context, index) {
+          Movie thisMovie = searchResult[index];
+          if (showFavourite == false) {
+            bool isMoviePresent = favMoviesBolc.state.movies
+                .any((movie) => movie.movieTitle == thisMovie.movieTitle);
+            if (isMoviePresent == true) {
+              thisMovie = thisMovie.copyWith(isFav: true);
+            }
+          }
+          return Container(
+            padding: const EdgeInsets.all(2),
+            child: Center(
+                child: MovieCard(
+              showSavedData: false,
+              favHandler: () {
+                if (thisMovie.isFav == true) {
+                  context
+                      .read<FavMoviesBloc>()
+                      .add(RemoveMovieEvent(movie: thisMovie));
+                } else {
+                  context
+                      .read<FavMoviesBloc>()
+                      .add(AddFavMovieEvent(movie: thisMovie));
+                }
+              },
+              movieGenere: thisMovie.genere,
+              isFav: thisMovie.isFav,
+              movieTitle: thisMovie.movieTitle,
+              bannerImgUrl: thisMovie.savedImagePath ?? thisMovie.bannerImgUrl,
+            )),
+          );
+        });
   }
 }
-
-
-
-/** */

@@ -7,10 +7,10 @@ sealed class FavMoviesEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class AddFavMovie extends FavMoviesEvent {
+class AddFavMovieEvent extends FavMoviesEvent {
   final Movie movie;
 
-  const AddFavMovie({
+  const AddFavMovieEvent({
     required this.movie,
   });
 
@@ -21,10 +21,10 @@ class AddFavMovie extends FavMoviesEvent {
   String toString() => 'ToggleHomeScreenLoadingState(isLoading: $movie)';
 }
 
-class RemoveMovie extends FavMoviesEvent {
+class RemoveMovieEvent extends FavMoviesEvent {
   final Movie movie;
 
-  const RemoveMovie({
+  const RemoveMovieEvent({
     required this.movie,
   });
 
@@ -33,4 +33,20 @@ class RemoveMovie extends FavMoviesEvent {
 
   @override
   String toString() => 'ToggleHomeScreenLoadingState(isLoading: $movie)';
+}
+
+class RetriveSavedMoviesEvent extends FavMoviesEvent {}
+
+class AddAllFavMoviesEvent extends FavMoviesEvent {
+  final List<Movie> movies;
+
+  const AddAllFavMoviesEvent({
+    required this.movies,
+  });
+
+  @override
+  List<Object> get props => [movies];
+
+  @override
+  String toString() => 'ToggleHomeScreenLoadingState(isLoading: $movies)';
 }

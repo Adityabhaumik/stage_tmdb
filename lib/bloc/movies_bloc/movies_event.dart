@@ -8,3 +8,17 @@ sealed class MoviesEvent extends Equatable {
 }
 
 class FetchMoviesFromApi extends MoviesEvent {}
+
+class AddAllMoviesEvent extends MoviesEvent {
+  final List<Movie> movies;
+
+  const AddAllMoviesEvent({
+    required this.movies,
+  });
+
+  @override
+  List<Object> get props => [movies];
+
+  @override
+  String toString() => 'ToggleHomeScreenLoadingState(isLoading: $movies)';
+}

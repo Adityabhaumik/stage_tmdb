@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:http/http.dart' as http;
+import 'package:tmdb/constants/tmdb.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../models/movie_model.dart';
 
@@ -25,6 +27,7 @@ mixin MovieBlocHelper {
         final temp = data['results'];
         for (final ele in temp) {
           String movieName = "Na";
+          String genere = "";
           if (ele['name'] != null) {
             movieName = ele['name'];
           } else if (ele['title'] != null) {
@@ -32,10 +35,16 @@ mixin MovieBlocHelper {
           } else if (ele['original_title'] != null) {
             movieName = ele['original_title'];
           }
+          for (final genereId in ele['genre_ids']) {
+            String? thisGenere = kTmdbMovieGenresInverted[genereId];
+            if (thisGenere != null) {
+              genere += "$thisGenere ";
+            }
+          }
           Movie newMovie = Movie(
+              id: const Uuid().v4(),
               movieTitle: movieName,
-              genereId: ele['genre_ids'] ?? [],
-              favHandler: () {},
+              genere: genere,
               bannerImgUrl: ele['poster_path'] ?? "NA",
               isFav: false);
           movies.add(newMovie);

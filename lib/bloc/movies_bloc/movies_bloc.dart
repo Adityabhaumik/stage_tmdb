@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:tmdb/bloc/fav_movies/fav_movies_bloc.dart';
 import 'package:tmdb/bloc/home_screen_state_bloc/home_screen_state_bloc_bloc.dart';
 import 'package:tmdb/bloc/movies_bloc/movie_bloc_helper.dart';
 
@@ -13,12 +14,12 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> with MovieBlocHelper {
   MoviesBloc({required this.homeScreenStateBlocBloc})
       : super(MoviesState.initial()) {
     on<FetchMoviesFromApi>((event, emit) async {
-      homeScreenStateBlocBloc
-          .add(ToggleHomeScreenLoadingState(isLoading: true));
       final List<Movie> newMovies = await fetchTrendingMovies();
-      homeScreenStateBlocBloc
-          .add(ToggleHomeScreenLoadingState(isLoading: false));
       emit(state.copyWith(movies: newMovies));
+    });
+
+    on<AddAllMoviesEvent>((event, emit) async {
+      emit(state.copyWith(movies: event.movies));
     });
   }
 }

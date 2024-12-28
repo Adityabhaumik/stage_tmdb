@@ -40,6 +40,9 @@ dependencies:
   equatable: ^2.0.5
   http: 
   cached_network_image: ^3.4.1
+  uuid: ^4.5.1
+  internet_connection_checker_plus: ^2.6.0
+  shared_preferences: ^2.3.4
 
 dev_dependencies:
   flutter_test:
