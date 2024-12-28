@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:http/http.dart' as http;
 
@@ -23,8 +24,16 @@ mixin MovieBlocHelper {
         //for(var ele:)
         final temp = data['results'];
         for (final ele in temp) {
+          String movieName = "Na";
+          if (ele['name'] != null) {
+            movieName = ele['name'];
+          } else if (ele['title'] != null) {
+            movieName = ele['title'];
+          } else if (ele['original_title'] != null) {
+            movieName = ele['original_title'];
+          }
           Movie newMovie = Movie(
-              movieTitle: ele['name'] ?? "NA",
+              movieTitle: movieName,
               genereId: ele['genre_ids'] ?? [],
               favHandler: () {},
               bannerImgUrl: ele['poster_path'] ?? "NA",

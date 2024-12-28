@@ -9,7 +9,7 @@ part 'fav_movies_state.dart';
 class FavMoviesBloc extends Bloc<FavMoviesEvent, FavMoviesState> {
   FavMoviesBloc() : super(FavMoviesState.initial()) {
     on<AddFavMovie>((event, emit) {
-      List<Movie> newList = state.movies;
+      List<Movie> newList = [...state.movies];
       newList.add(event.movie);
       emit(state.copyWith(movies: newList));
     });

@@ -23,6 +23,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final homeScreenState = context.watch<HomeScreenStateBlocBloc>();
+    final favMoviesBolc = context.watch<FavMoviesBloc>();
     return Scaffold(
       body: Builder(builder: (context) {
         if (homeScreenState.state.isLoading == true) {
@@ -33,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return GestureDetector(
           onTap: () async {},
           child: Builder(builder: (context) {
-            if (context.read<MoviesBloc>().state.movies.length == 0) {
+            if (context.read<MoviesBloc>().state.movies.isEmpty) {
               return Center(
                 child: GestureDetector(
                     onTap: () {
@@ -54,8 +55,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemBuilder: (context, index) {
                   Movie thisMovie =
                       context.read<MoviesBloc>().state.movies[index];
-                  bool isMoviePresent =
-                      movies.any((movie) => movie.movieTitle == 'Movie A');
+
+                  bool isMoviePresent = favMoviesBolc.state.movies
+                      .any((movie) => movie.movieTitle == thisMovie.movieTitle);
+                  if (isMoviePresent == true) {
+                    thisMovie = thisMovie.copyWith(isFav: true);
+                  }
                   return Container(
                     padding: const EdgeInsets.all(2),
                     child: Center(
@@ -67,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       },
                       movieGenere:
                           "${kTmdbMovieGenresInverted[thisMovie.genereId[0] ?? "NA"]}",
-                      isFav: false,
+                      isFav: thisMovie.isFav,
                       movieTitle: thisMovie.movieTitle,
                       bannerImgUrl: thisMovie.bannerImgUrl,
                     )),

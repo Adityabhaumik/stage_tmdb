@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 class Movie {
   final String movieTitle;
   final Function favHandler;
@@ -28,5 +29,21 @@ class Movie {
   @override
   String toString() {
     return 'Movie(title: $movieTitle, genre: $genereId, isFavorite: $isFav)';
+  }
+
+  Movie copyWith({
+    String? movieTitle,
+    Function? favHandler,
+    String? bannerImgUrl,
+    bool? isFav,
+    List? genereId,
+  }) {
+    return Movie(
+      movieTitle: movieTitle ?? this.movieTitle,
+      favHandler: favHandler ?? this.favHandler,
+      bannerImgUrl: bannerImgUrl ?? this.bannerImgUrl,
+      isFav: isFav ?? this.isFav,
+      genereId: genereId ?? this.genereId,
+    );
   }
 }
