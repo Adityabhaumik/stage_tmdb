@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tmdb/constants/tmdb.dart';
 
+import '../../constants/shared_preferences.dart';
 import '../../models/movie_model.dart';
 
 mixin FavMovieHelper {
@@ -40,12 +41,12 @@ mixin FavMovieHelper {
       String thisMovie = mov.saveFormat(imgPath);
       dataToSave.add(thisMovie);
     }
-    await prefs.setStringList("favMovies", dataToSave);
+    await prefs.setStringList(keySavedFavMovieList, dataToSave);
   }
 
   Future<List<Movie>> getSavedMovies() async {
     final prefs = await SharedPreferences.getInstance();
-    List<String>? savedData = prefs.getStringList("favMovies");
+    List<String>? savedData = prefs.getStringList(keySavedFavMovieList);
     List<Movie> savedMovies = [];
     for (String str in savedData ?? []) {
       Movie thisMovie = Movie.retrive(str);

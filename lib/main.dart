@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tmdb/bloc/fav_movies/fav_movies_bloc.dart';
 import 'package:tmdb/bloc/home_screen_state_bloc/home_screen_state_bloc_bloc.dart';
 import 'package:tmdb/bloc/movies_bloc/movies_bloc.dart';
-import 'package:tmdb/bloc/net_state_bloc/net_state_bloc_bloc.dart';
+import 'package:tmdb/bloc/net_state/net_state_bloc_bloc.dart';
 import 'screens/home_screen/home_screen.dart';
 
 void main() {
@@ -42,14 +42,9 @@ class _MyAppState extends State<MyApp> {
                 favMoviesBloc: context.read<FavMoviesBloc>(),
                 moviesBloc: context.read<MoviesBloc>()),
           ),
-          // BlocProvider<StorageLimitBloc>(
-          //   create: (context) => StorageLimitBloc(
-          //       storageLimit: 1000,
-          //       popUpMessengerBloc: context.read<PopUpMessengerBloc>()),
-          //),
         ],
         child: MaterialApp(
-          title: 'Flutter Demo',
+          title: 'Adi Stage Submission',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,

@@ -1,10 +1,7 @@
-import 'dart:math';
-
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:tmdb/bloc/fav_movies/helper.dart';
+import 'package:tmdb/bloc/fav_movies/fav_movies_bloc_helper.dart';
 
-import '../../constants/tmdb.dart';
 import '../../models/movie_model.dart';
 import '../home_screen_state_bloc/home_screen_state_bloc_bloc.dart';
 

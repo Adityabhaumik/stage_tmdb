@@ -4,9 +4,9 @@ import 'package:tmdb/bloc/fav_movies/fav_movies_bloc.dart';
 
 import 'package:tmdb/bloc/home_screen_state_bloc/home_screen_state_bloc_bloc.dart';
 import 'package:tmdb/bloc/movies_bloc/movies_bloc.dart';
-import 'package:tmdb/bloc/net_state_bloc/net_state_bloc_bloc.dart';
 import 'package:tmdb/screens/home_screen/utils/movie_card.dart';
 
+import '../../bloc/net_state/net_state_bloc_bloc.dart';
 import '../../models/movie_model.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -45,41 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text("No Internet"),
         ),
         body: Builder(builder: (context) {
-          return GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 2.0,
-                  mainAxisSpacing: 10.0,
-                  childAspectRatio: 0.5),
-              itemCount: context.read<FavMoviesBloc>().state.movies.length,
-              itemBuilder: (context, index) {
-                Movie thisMovie =
-                    context.read<FavMoviesBloc>().state.movies[index];
-                return Container(
-                  padding: const EdgeInsets.all(2),
-                  child: Center(
-                      child: MovieCard(
-                    showSavedData: true,
-                    favHandler: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Action Could not be completed! Connect to Internet',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: Colors.redAccent,
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                    },
-                    movieGenere: thisMovie.genere,
-                    isFav: thisMovie.isFav,
-                    movieTitle: thisMovie.movieTitle,
-                    bannerImgUrl:
-                        thisMovie.savedImagePath ?? thisMovie.bannerImgUrl,
-                  )),
-                );
-              });
+          return offlineSavedMovies(context);
         }),
       );
     } else if (netState.state.state == NetState.available) {
@@ -148,56 +114,94 @@ class _MyHomePageState extends State<MyHomePage> {
           if (showFavourite == true) {
             return onLineFavMovies(context);
           }
-
-          return Builder(builder: (context) {
-            if (context.read<MoviesBloc>().state.movies.isEmpty) {
-              return Center(
-                child: Text("Failed to Retrive Movies"),
-              );
-            }
-            return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 2.0,
-                    mainAxisSpacing: 10.0,
-                    childAspectRatio: 0.5),
-                itemCount: context.read<MoviesBloc>().state.movies.length,
-                itemBuilder: (context, index) {
-                  Movie thisMovie =
-                      context.read<MoviesBloc>().state.movies[index];
-
-                  bool isMoviePresent = favMoviesBolc.state.movies
-                      .any((movie) => movie.movieTitle == thisMovie.movieTitle);
-                  if (isMoviePresent == true) {
-                    thisMovie = thisMovie.copyWith(isFav: true);
-                  }
-                  return Container(
-                    padding: const EdgeInsets.all(2),
-                    child: Center(
-                        child: MovieCard(
-                      favHandler: () {
-                        if (thisMovie.isFav == true) {
-                          context
-                              .read<FavMoviesBloc>()
-                              .add(RemoveMovieEvent(movie: thisMovie));
-                        } else {
-                          context
-                              .read<FavMoviesBloc>()
-                              .add(AddFavMovieEvent(movie: thisMovie));
-                        }
-                      },
-                      movieGenere: thisMovie.genere,
-                      isFav: thisMovie.isFav,
-                      movieTitle: thisMovie.movieTitle,
-                      bannerImgUrl: thisMovie.bannerImgUrl,
-                    )),
-                  );
-                });
-          });
+          return allMovies(favMoviesBolc);
         }),
       );
     }
     return const SizedBox();
+  }
+
+  GridView offlineSavedMovies(BuildContext context) {
+    return GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 2.0,
+            mainAxisSpacing: 10.0,
+            childAspectRatio: 0.5),
+        itemCount: context.read<FavMoviesBloc>().state.movies.length,
+        itemBuilder: (context, index) {
+          Movie thisMovie = context.read<FavMoviesBloc>().state.movies[index];
+          return Container(
+            padding: const EdgeInsets.all(2),
+            child: Center(
+                child: MovieCard(
+              showSavedData: true,
+              favHandler: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Action Could not be completed! Connect to Internet',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.redAccent,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              },
+              movieGenere: thisMovie.genere,
+              isFav: thisMovie.isFav,
+              movieTitle: thisMovie.movieTitle,
+              bannerImgUrl: thisMovie.savedImagePath ?? thisMovie.bannerImgUrl,
+            )),
+          );
+        });
+  }
+
+  Builder allMovies(FavMoviesBloc favMoviesBolc) {
+    return Builder(builder: (context) {
+      if (context.read<MoviesBloc>().state.movies.isEmpty) {
+        return const Center(
+          child: Text("Failed to Retrive Movies"),
+        );
+      }
+      return GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 2.0,
+              mainAxisSpacing: 10.0,
+              childAspectRatio: 0.5),
+          itemCount: context.read<MoviesBloc>().state.movies.length,
+          itemBuilder: (context, index) {
+            Movie thisMovie = context.read<MoviesBloc>().state.movies[index];
+
+            bool isMoviePresent = favMoviesBolc.state.movies
+                .any((movie) => movie.movieTitle == thisMovie.movieTitle);
+            if (isMoviePresent == true) {
+              thisMovie = thisMovie.copyWith(isFav: true);
+            }
+            return Container(
+              padding: const EdgeInsets.all(2),
+              child: Center(
+                  child: MovieCard(
+                favHandler: () {
+                  if (thisMovie.isFav == true) {
+                    context
+                        .read<FavMoviesBloc>()
+                        .add(RemoveMovieEvent(movie: thisMovie));
+                  } else {
+                    context
+                        .read<FavMoviesBloc>()
+                        .add(AddFavMovieEvent(movie: thisMovie));
+                  }
+                },
+                movieGenere: thisMovie.genere,
+                isFav: thisMovie.isFav,
+                movieTitle: thisMovie.movieTitle,
+                bannerImgUrl: thisMovie.bannerImgUrl,
+              )),
+            );
+          });
+    });
   }
 
   GridView onLineFavMovies(BuildContext context) {

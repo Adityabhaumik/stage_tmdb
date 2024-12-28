@@ -1,9 +1,7 @@
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 import '../../../constants/tmdb.dart';
 
@@ -130,18 +128,17 @@ class LocalImageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final file = File(filePath);
-
     return FutureBuilder<bool>(
       future: file.exists(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator(); // Loading indicator
+          return const CircularProgressIndicator();
         }
 
         if (snapshot.data == true) {
-          return Image.file(file); // Show local image
+          return Image.file(file);
         } else {
-          return const Icon(Icons.image_not_supported); // Placeholder
+          return const Icon(Icons.image_not_supported);
         }
       },
     );

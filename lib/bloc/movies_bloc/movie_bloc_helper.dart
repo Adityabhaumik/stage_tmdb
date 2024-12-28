@@ -38,7 +38,7 @@ mixin MovieBlocHelper {
           for (final genereId in ele['genre_ids']) {
             String? thisGenere = kTmdbMovieGenresInverted[genereId];
             if (thisGenere != null) {
-              genere += "$thisGenere ";
+              genere += "$thisGenere";
             }
           }
           Movie newMovie = Movie(
